@@ -1,4 +1,3 @@
-#!/Applications/Python/python.exe
 import re
 import resultsDatabase
 import subprocess

@@ -1,4 +1,3 @@
-#!/Applications/Python/python.exe
 import argparse
 from collections import Counter
 import math

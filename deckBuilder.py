@@ -1,4 +1,3 @@
-#!/Applications/Python/python.exe
 import math
 from collections import namedtuple
 import random

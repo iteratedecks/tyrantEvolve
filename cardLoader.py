@@ -1,4 +1,3 @@
-#!/Applications/Python/python.exe
 import xml.sax.handler
 from collections import namedtuple
 from collections import Counter

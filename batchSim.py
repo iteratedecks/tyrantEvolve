@@ -1,4 +1,3 @@
-#!/Applications/Python/python.exe
 import argparse
 import simulator
 from operator import itemgetter
