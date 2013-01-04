@@ -38,6 +38,18 @@ def simulatorArgsAddSeed(args):
 def simulatorArgsAddSurge(args):
     return args.extend(["-s"]);
 
+def simulatorArgsAddVersus(args, versusType, versusId):
+    if(versusType == "quest"):
+        args = simulatorArgsAddQuest(args, versusId)
+    elif(versusType == "mission"):
+        args = simulatorArgsAddMission(args, versusId)
+    elif(versusType == "raid"):
+        args = simulatorArgsAddRaid(args, versusId)
+    elif(versusType == "hash"):
+        args = simulatorArgsAddHash(args, versusId)
+    
+    return args
+
 def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False):
     useAllAttackHashes = (attackHashes is None)
     if(defenseHashes is None):
@@ -97,13 +109,15 @@ def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
 
     if(ordered):
         args = simulatorArgsAddOrdered(args);
+
+    versusType = "quest"
     
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
         questArgs = list(args)
         questArgs = simulatorArgsAddHash(questArgs, attackHash)
-        questArgs = simulatorArgsAddQuest(questArgs, questId)
+        questArgs = simulatorArgsAddVersus(questArgs, versusType, questId)
         result = runSimulation(questArgs)
 
         simResults = resultRegex.match(result).groups()
@@ -127,12 +141,14 @@ def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, 
     if(surge):
         args = simulatorArgsAddSurge(args);
 
+    versusType = "mission"
+
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
         missionArgs = list(args)
         missionArgs = simulatorArgsAddHash(missionArgs, attackHash)
-        missionArgs = simulatorArgsAddMission(missionArgs, missionId)
+        missionArgs = simulatorArgsAddVersus(missionArgs, versusType, missionId)
         result = runSimulation(args)
 
         simResults = resultRegex.match(result).groups()
@@ -154,12 +170,14 @@ def runRaidGroup(attackHashes, raidId, n, ordered = False, resultsDb = None):
     if(ordered):
         args = simulatorArgsAddOrdered(args);
     
+    versusType = "raid"
+
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
         raidArgs = list(args)
         raidArgs = simulatorArgsAddHash(raidArgs, attackHash)
-        raidArgs = simulatorArgsAddRaid(raidArgs, raidId)
+        raidArgs = simulatorArgsAddVersus(raidArgs, versusType, raidId)
         result = runSimulation(raidArgs)
 
         simResults = resultRegex.match(result).groups()
@@ -178,17 +196,23 @@ def runSimulationsAgainstDefenses(attackHash, defenseHashes, n, resultsDb = None
     resultRegex = re.compile(regexString)
     
     simulationCap = 10000
+
+    args = simulatorArgsBase()
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddNumSims(args, n)
+
+    versusType = "hash"
     
     for defense_i in range(0, len(defenseHashes)):
         defenseHash = defenseHashes[defense_i]
         dbRow = []
 #        print(attackHash + " vs " + defenseHash)
         if((not defenseHash in resultsDb) or (not attackHash in resultsDb[defenseHash]) or (resultsDb[defenseHash][attackHash][0] < simulationCap)):
-            args = simulatorArgsBase(attackHash, defenseHash)
-            args = simulatorArgsAddSeed(args)
-            args = simulatorArgsAddNumSims(args, n)
+            simArgs = list(args)
+            simArgs = simulatorArgsAddHash(simArgs, attackHash)
+            simArgs = simulatorArgsAddVersus(simArgs, versusType, defenseHash)
 
-            result = runSimulation(args)
+            result = runSimulation(simArgs)
         else:
             print("Skipping " + attackHash + " \tversus " + defenseHash)
             continue
