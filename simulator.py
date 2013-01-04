@@ -3,6 +3,39 @@ import re
 import resultsDatabase
 import subprocess
 
+# this path is relative to the working directory; you should
+# call these scripts from the same directory that contains the simulator
+simulatorPath = "iteratedecks-cli.exe"
+
+def simulatorArgsBase(attackHash = None, defenseHash = None, path = simulatorPath):
+    args = [path]
+    if(attackHash):
+        args.append(attackHash)
+    if(defenseHash):
+        args.append(defenseHash)
+    return args
+
+def simulatorArgsAddMission(args, missionId):
+    return args.extend(["-m", str(missionId)]);
+
+def simulatorArgsAddNumSims(args, n):
+    return args.extend(["-n", str(n)]);
+
+def simulatorArgsAddOrdered(args):
+    return args.extend(["-o"]);
+
+def simulatorArgsAddQuest(args, questId):
+    return args.extend(["-Q", str(questId)]);
+
+def simulatorArgsAddRaid(args, raidId):
+    return args.extend(["-r", str(raidId)]);
+
+def simulatorArgsAddSeed(args):
+    return args.extend(["--seed"]);
+
+def simulatorArgsAddSurge(args):
+    return args.extend(["-s"]);
+
 def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False):
     useAllAttackHashes = (attackHashes is None)
     if(defenseHashes is None):
@@ -51,12 +84,14 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
     return attackScores.values()
 
 def runQuest(attackHash, questId, n, ordered = False):
-    program = "CLI.exe"
-    #program = "iteratedecks-cli.exe"
-    args = [program, "--seed", attackHash, "-Q " + str(questId), "-n " + str(n)]
+    args = simulatorArgsBase(attackHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddQuest(args, questId)
+    args = simulatorArgsAddNumSims(args, n)
+
     if(ordered):
-        args.append("-o")
-    #print(args)
+        args = simulatorArgsAddOrdered(args);
+
     result = subprocess.check_output(args)
     return result.decode()
 
@@ -77,14 +112,16 @@ def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
     return resultsDb
 
 def runMission(attackHash, missionId, n, ordered = False, surge = False):
-    program = "CLI.exe"
-    #program = "iteratedecks-cli.exe"
-    args = [program, "--seed", attackHash, "-m " + str(missionId), "-n " + str(n)]
+    args = simulatorArgsBase(attackHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddMission(args, missionId)
+    args = simulatorArgsAddNumSims(args, n)
+
     if(ordered):
-        args.append("-o")
+        args = simulatorArgsAddOrdered(args);
     if(surge):
-        args.append("-s")
-    #print(args)
+        args = simulatorArgsAddSurge(args);
+
     result = subprocess.check_output(args)
     return result.decode()
 
@@ -105,12 +142,14 @@ def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, 
     return resultsDb
 
 def runRaid(attackHash, raidId, n, ordered = False):
-    program = "CLI.exe"
-    #program = "iteratedecks-cli.exe"
-    args = [program, "--seed", attackHash, "-r " + str(raidId), "-n " + str(n)]
+    args = simulatorArgsBase(attackHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddRaid(args, raidId)
+    args = simulatorArgsAddNumSims(args, n)
+
     if(ordered):
-        args.append("-o")
-    #print(args)
+        args = simulatorArgsAddOrdered(args);
+
     result = subprocess.check_output(args)
     return result.decode()
 
@@ -130,9 +169,14 @@ def runRaidGroup(attackHashes, raidId, n, ordered = False, resultsDb = None):
     return resultsDb
 
 def runSimulation(attackHash, defenseHash, n):
-    program = "CLI.exe"
-    #program = "iteratedecks-cli.exe"
-    result = subprocess.check_output([program, "--seed", attackHash, defenseHash, "-n " + str(n)])
+    args = simulatorArgsBase(attackHash, defenseHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddNumSims(args, n)
+
+    #if(ordered):
+    #    args = simulatorArgsAddOrdered(args);
+
+    result = subprocess.check_output(args)
     return result.decode()
 
 def runSimulationsAgainstDefenses(attackHash, defenseHashes, n, resultsDb = None):
