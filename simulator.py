@@ -14,6 +14,9 @@ def simulatorArgsBase(attackHash = None, defenseHash = None, path = simulatorPat
         args.append(defenseHash)
     return args
 
+def simulatorArgsAddHash(args, deckHash):
+    return args.append(attackHash)
+
 def simulatorArgsAddMission(args, missionId):
     return args.extend(["-m", str(missionId)]);
 
@@ -82,47 +85,32 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
 
     return attackScores.values()
 
-def runQuest(attackHash, questId, n, ordered = False):
-    args = simulatorArgsBase(attackHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddQuest(args, questId)
-    args = simulatorArgsAddNumSims(args, n)
-
-    if(ordered):
-        args = simulatorArgsAddOrdered(args);
-
-    result = subprocess.check_output(args)
-    return result.decode()
-
 def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
     regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
     resultRegex = re.compile(regexString)
+
+    args = simulatorArgsBase()
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddNumSims(args, n)
+
+    if(ordered):
+        args = simulatorArgsAddOrdered(args);
     
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
-        result = runQuest(attackHash, questId, n)
+        questArgs = list(args)
+        questArgs = simulatorArgsAddHash(questArgs, attackHash)
+        questArgs = simulatorArgsAddQuest(questArgs, questId)
+        result = runSimulation(questArgs)
+
         simResults = resultRegex.match(result).groups()
         #print(simResults)
         resultsDatabase.recordResults(str(questId), attackHash, simResults, resultsDb)
 
     return resultsDb
-
-def runMission(attackHash, missionId, n, ordered = False, surge = False):
-    args = simulatorArgsBase(attackHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddMission(args, missionId)
-    args = simulatorArgsAddNumSims(args, n)
-
-    if(ordered):
-        args = simulatorArgsAddOrdered(args);
-    if(surge):
-        args = simulatorArgsAddSurge(args);
-
-    result = subprocess.check_output(args)
-    return result.decode()
 
 def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, resultsDb = None):
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
@@ -130,51 +118,56 @@ def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, 
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
     resultRegex = re.compile(regexString)
     
+    args = simulatorArgsBase(attackHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddNumSims(args, n)
+
+    if(ordered):
+        args = simulatorArgsAddOrdered(args);
+    if(surge):
+        args = simulatorArgsAddSurge(args);
+
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
-        result = runMission(attackHash, missionId, n, ordered, surge)
+        missionArgs = list(args)
+        missionArgs = simulatorArgsAddHash(missionArgs, attackHash)
+        missionArgs = simulatorArgsAddMission(missionArgs, missionId)
+        result = runSimulation(args)
+
         simResults = resultRegex.match(result).groups()
         #print(simResults)
         resultsDatabase.recordResults(str(missionId), attackHash, simResults, resultsDb)
 
     return resultsDb
 
-def runRaid(attackHash, raidId, n, ordered = False):
-    args = simulatorArgsBase(attackHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddRaid(args, raidId)
-    args = simulatorArgsAddNumSims(args, n)
-
-    if(ordered):
-        args = simulatorArgsAddOrdered(args);
-
-    result = subprocess.check_output(args)
-    return result.decode()
-
 def runRaidGroup(attackHashes, raidId, n, ordered = False, resultsDb = None):
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
     regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
     resultRegex = re.compile(regexString)
+
+    args = simulatorArgsBase(attackHash)
+    args = simulatorArgsAddSeed(args)
+    args = simulatorArgsAddNumSims(args, n)
+
+    if(ordered):
+        args = simulatorArgsAddOrdered(args);
     
     for attackHash in attackHashes:
         deckResult = [attackHash, 0]
 
-        result = runRaid(attackHash, raidId, n)
+        raidArgs = list(args)
+        raidArgs = simulatorArgsAddHash(raidArgs, attackHash)
+        raidArgs = simulatorArgsAddRaid(raidArgs, raidId)
+        result = runSimulation(raidArgs)
+
         simResults = resultRegex.match(result).groups()
         resultsDatabase.recordResults(str(raidId), attackHash, simResults, resultsDb)
 
     return resultsDb
 
-def runSimulation(attackHash, defenseHash, n):
-    args = simulatorArgsBase(attackHash, defenseHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddNumSims(args, n)
-
-    #if(ordered):
-    #    args = simulatorArgsAddOrdered(args);
-
+def runSimulation(args):
     result = subprocess.check_output(args)
     return result.decode()
 
@@ -191,7 +184,11 @@ def runSimulationsAgainstDefenses(attackHash, defenseHashes, n, resultsDb = None
         dbRow = []
 #        print(attackHash + " vs " + defenseHash)
         if((not defenseHash in resultsDb) or (not attackHash in resultsDb[defenseHash]) or (resultsDb[defenseHash][attackHash][0] < simulationCap)):
-            result = runSimulation(attackHash, defenseHash, n)
+            args = simulatorArgsBase(attackHash, defenseHash)
+            args = simulatorArgsAddSeed(args)
+            args = simulatorArgsAddNumSims(args, n)
+
+            result = runSimulation(args)
         else:
             print("Skipping " + attackHash + " \tversus " + defenseHash)
             continue
