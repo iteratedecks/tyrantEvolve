@@ -22,41 +22,27 @@ def main():
     argParser.add_argument('endStep', type=int, default=2, help='end at this evolution step (exclusive)')
     argParser.add_argument('-d', '--numDecks', type=int, default=1, help='number of decks to evolve')
     argParser.add_argument('-n', '--numSims', type=int, default=100, help='number of simulations per comparison')
+    argParser.add_argument('-s', '--surge', type=int, default=0, help='attack deck surges')
+    argParser.add_argument('--ignoreActions', type=int, default=0, help='Do not use action cards')
+    argParser.add_argument('--ignoreCommons', type=int, default=0, help='Do not use commons')
 
     args = argParser.parse_args()
 
-    cardsFile = args.cardsFile
-    ownedFile = args.ownedFile
-
-    decksToEvolve = args.numDecks
     iterationsPerSimulation = args.numSims
     useOwnedFilter = args.owned
-    ordered = (args.ordered == 1)
-
-    missionId = args.missionId
+    
     startStep = args.startStep
     endStep = args.endStep
 
-    #TODO turn the common filter into a flag
-    ignoreCommons = True
-    ignoreActions = not ordered
-    keepBestInSlot = True
-    surge = False
-
     numberOfPlayedCards = 10
-    cardParser = xml.sax.make_parser()
-    handler = cardLoader.CardHandler()
-    cardParser.setContentHandler(handler)
-    cardParser.parse(cardsFile)
-    cards = handler.cards
 
     filePrefix = args.prefix
     if(filePrefix == 'default'):
         filePrefix = "mission"
-        filePrefix += "%02d" % missionId
-        if(ordered):
+        filePrefix += "%02d" % args.missionId
+        if(args.ordered):
             filePrefix += "o"
-        if(surge):
+        if(args.surge):
             filePrefix += "s"
 
     dataDirectory = args.outputDir
@@ -65,13 +51,15 @@ def main():
     
     filePrefix += "_"
     
+    cards = cardLoader.loadCardsWithArgs(args)
+
     ownedCards = []
     ownedCardsSet = set()
-    if(useOwnedFilter):
-        ownedCards = cardLoader.loadCardsFromNameFile(ownedFile, cards)
-        ownedCardsSet = set(ownedCards.elements())    
+    if(args.owned):
+        ownedCards = cardLoader.loadCardsFromNameFile(args.ownedFile, cards)
+        ownedCardsSet = set(ownedCards.elements())
 
-    [commanderIds, playedIds, uniqueIds, legendaryIds] = cardLoader.getIdsFromCardData(cards, ownedCardsSet, ignoreActions, ignoreCommons)
+    [commanderIds, playedIds, uniqueIds, legendaryIds] = cardLoader.getIdsFromCardData(cards, ownedCardsSet, args.ignoreActions, args.ignoreCommons)
 
     replacementSets = deckBuilder.createReplacementSets(playedIds, numberOfPlayedCards)
 
@@ -88,10 +76,10 @@ def main():
 
         deckHashes = []
         if step == 0:
-            for deck_i in range(0, decksToEvolve):
+            for deck_i in range(0, args.numDecks):
                 randomDeck = deckBuilder.randomDeck(commanderIds, playedIds, legendaryIds, uniqueIds)
                 deckHashes.append(deckHasher.deckToHash(randomDeck))
-                resultsDb = simulator.runMissionGroup(deckHashes, missionId, iterationsPerSimulation, ordered, surge, resultsDb)
+            resultsDb = simulator.runMissionGroup(deckHashes, args.missionId, iterationsPerSimulation, ordered, surge, resultsDb)
 
         else:
             previousFile = dataDirectory + filePrefix + str(step - 1) + ".txt"
@@ -114,7 +102,7 @@ def main():
                         replacements = deckBuilder.updateReplacementsForIndex(set(replacementSets[replacementIndex]), evolvedDeck, evolve_i, uniqueIds, legendaryIds, ownedCards)
 
                     evolvedDecks.extend(deckBuilder.deckEvolutionsForIndex(evolvedDeck, evolve_i, replacements))
-                    if(ordered and evolve_i > 0):
+                    if(args.ordered and evolve_i > 0):
                         swap_index = (evolve_i + step) % 10 + 1
                         if(swap_index != evolve_i):
                             #print("swapping " + str(evolve_i) + " for " + str(swap_index))
@@ -128,8 +116,8 @@ def main():
                     if(evolvedHash not in evolvedHashes):
                         evolvedHashes.append(evolvedHash)
 
-                    resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, iterationsPerSimulation, ordered, surge, resultsDb)
-                    resultScores = simulator.getAttackScores(resultsDb, [str(missionId)], evolvedHashes, False)
+                    resultsDb = simulator.runMissionGroup(evolvedHashes, args.missionId, iterationsPerSimulation, args.ordered, args.surge, resultsDb)
+                    resultScores = simulator.getAttackScores(resultsDb, [str(args.missionId)], evolvedHashes, False)
 
                     resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
                     previousHashes[oldHash_i] = resultScores[0][0]
@@ -140,7 +128,7 @@ def main():
             deckHashes = list(previousHashes)
 
         # recalculate the scores against the new best
-        resultScores = simulator.getAttackScores(resultsDb, [str(missionId)], None, False)
+        resultScores = simulator.getAttackScores(resultsDb, [str(args.missionId)], None, False)
         resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
         if(len(resultScores) > 20):
             resultScores = resultScores[0:20]
