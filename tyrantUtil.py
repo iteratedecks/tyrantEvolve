@@ -126,8 +126,8 @@ def main():
     argParser.add_argument('-p', '--dataPrefix', default='evolution', help='name for evolution set')
     argParser.add_argument('--ownedFile', default='wildcard/ownedcards.txt', help='file containing owned cardlist')
     argParser.add_argument('--defenseFile', help='file containing defense decks')
-    argParser.add_argument('startStep', type=int, default=0, help='start from this evolution step')
-    argParser.add_argument('endStep', type=int, default=2, help='end at this evolution step (exclusive)')
+    argParser.add_argument('--startStep', type=int, default=0, help='start from this evolution step')
+    argParser.add_argument('stepCount', type=int, default=2, help='end at this evolution step (exclusive)')
     argParser.add_argument('-d', '--numDecks', type=int, default=10, help='number of decks to evolve')
     argParser.add_argument('-n', '--numSims', type=int, default=100, help='number of simulations per comparison')
 
@@ -135,7 +135,7 @@ def main():
     
     #decksToEvolve = args.numDecks
     startStep = args.startStep
-    endStep = args.endStep
+    endStep = args.stepCount + startStep
     #iterationsPerSimulation = args.numSims
     
     ignoreCommons = True
