@@ -16,7 +16,7 @@ import cardLoader
 import simulator
 
 def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds):
-    #dataDirectory = args.outputDir + args.dataPrefix + "/" #TODO verify directory exists
+    #dataDirectory = args.outputDir + args.prefix + "/" #TODO verify directory exists
     enemyHashes = versus["hash"]
 
     useDefenseFile = args.defenseFile != None
@@ -26,7 +26,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
     #    enemyHashes = cardLoader.loadHashesFromFile(args.defenseFile)
 
     print("Starting step " + str(step))
-    stepFile = args.outputDir + args.dataPrefix + str(step) + ".txt"
+    stepFile = args.outputDir + args.prefix + str(step) + ".txt"
     if(os.path.exists(stepFile)):
         print("\t... Step " + str(step) + " file found. Skipping...")
         return
@@ -53,7 +53,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         #resultsDb = simulator.runMissionGroup(deckHashes, args.missionId, iterationsPerSimulation, ordered, surge, resultsDb)
 
     else:
-        previousFile = args.outputDir + args.dataPrefix + str(step - 1) + ".txt"
+        previousFile = args.outputDir + args.prefix + str(step - 1) + ".txt"
         previousHashes = cardLoader.loadHashesFromFile(previousFile, 1)
 
         for evolve_i in range(0, 11):
@@ -114,7 +114,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     #outputFile = filePrefix + str(step) + ".txt"
-    deckOutput.saveStep(args.outputDir, args.dataPrefix, str(step), resultScores)
+    deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
 
 def main():
     #TODO turn the common filter into a flag    
@@ -126,7 +126,7 @@ def main():
     argParser.add_argument('-n', '--numSims', type=int, default=100, help='number of simulations per comparison')
     argParser.add_argument('-o', '--ordered', type=int, default=0, help='ordered deck')
     argParser.add_argument('-O', '--owned', type=int, default=0, help='use owned cards as a filter')
-    argParser.add_argument('-p', '--dataPrefix', default='evolution', help='name for evolution set')
+    argParser.add_argument('-p', '--prefix', default='evolution', help='name for evolution set')
     argParser.add_argument('-s', '--surge', type=int, default=0, help='attack deck surges')
     argParser.add_argument('--cardsFile', default='cards.xml', help='file containing card xml data')
     argParser.add_argument('--defenseFile', help='file containing defense decks')
