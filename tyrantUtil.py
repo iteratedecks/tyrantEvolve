@@ -125,9 +125,9 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
     resultScores = None
     if("hash" in versus and len(versus["hash"]) > 0):
         if(args.defense):
-            resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
-        else:
             resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
+        else:
+            resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
         resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
 
     if("mission" in versus and len(versus["mission"]) > 0):
