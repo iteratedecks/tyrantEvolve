@@ -104,26 +104,33 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
 
     return attackScores.values()
 
-def runGroup(groupArgs, attackHashes, versusId, resultsDb):
+def runAttackGroup(groupArgs, attackHashes, versusId, resultsDb):
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
     regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
     resultRegex = re.compile(regexString)
 
+    simulationCap = 10000
+
     for attackHash in attackHashes:
-        #deckResult = [attackHash, 0]
+        if((versusId in resultsDb) and (attackHash in resultsDb[versusId]) and (resultsDb[versusId][attackHash][0] >= simulationCap)):
+            print("Skipping " + attackHash + " \tversus " + versusId)
+            continue
 
         attackArgs = list(groupArgs)
         attackArgs = simulatorArgsAddHash(attackArgs, attackHash)
         result = runSimulation(attackArgs)
 
         simResults = resultRegex.match(result).groups()
-        #print(simResults)
         resultsDatabase.recordResults(str(versusId), attackHash, simResults, resultsDb)
 
     return resultsDb
 
 def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, resultsDb = None):
+    
+    if(resultsDb is None):
+        resultsDb = {}
+
     args = simulatorArgsBase()
     args = simulatorArgsAddSeed(args)
     args = simulatorArgsAddNumSims(args, n)
@@ -131,11 +138,25 @@ def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, res
     if(ordered):
         args = simulatorArgsAddOrdered(args);
 
-    for versusType in versus:
-        versusIds = versus[versusType]
+    attackCount = len(attackHashes)
+
+    for versusType in versusMatrix:
+        versusIds = versusMatrix[versusType]
+
+        versusCounter = 0
+        versusCount = len(versusIds)
+
+        print("starting " + versusType + " matrix... ")
+
         for versusId in versusIds:
-            args = simulatorArgsAddVersus(args, versusType, versusId)
-            resultsDb = runGroup(args, attackHashes, versusId, resultsDb)
+            totalSimulations = attackCount * (versusCount - versusCounter) * n
+            print("\t" + str(versusCount - versusCounter) + "x" + str(attackCount) + "x" + str(n) + "=" + str(totalSimulations) + " simulations left")
+
+            groupArgs = list(args)
+            groupArgs = simulatorArgsAddVersus(groupArgs, versusType, versusId)
+            resultsDb = runAttackGroup(groupArgs, attackHashes, versusId, resultsDb)
+
+            versusCounter = versusCounter + 1
 
     return resultsDb
 
@@ -161,53 +182,8 @@ def runSimulation(args):
     result = subprocess.check_output(args)
     return result.decode()
 
-def runSimulationsAgainstDefenses(attackHash, defenseHashes, n, resultsDb = None):
-    regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
-    regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
-    regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
-    resultRegex = re.compile(regexString)
-    
-    simulationCap = 10000
-
-    args = simulatorArgsBase()
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddNumSims(args, n)
-
-    versusType = "hash"
-    
-    for defense_i in range(0, len(defenseHashes)):
-        defenseHash = defenseHashes[defense_i]
-        dbRow = []
-#        print(attackHash + " vs " + defenseHash)
-        if((not defenseHash in resultsDb) or (not attackHash in resultsDb[defenseHash]) or (resultsDb[defenseHash][attackHash][0] < simulationCap)):
-            simArgs = list(args)
-            simArgs = simulatorArgsAddHash(simArgs, attackHash)
-            simArgs = simulatorArgsAddVersus(simArgs, versusType, defenseHash)
-            result = runSimulation(simArgs)
-        else:
-            print("Skipping " + attackHash + " \tversus " + defenseHash)
-            continue
-        simResults = resultRegex.match(result).groups()
-        resultsDatabase.recordResults(defenseHash, attackHash, simResults, resultsDb)
-    return resultsDb
-
 def runSimulationMatrix(attackHashes, defenseHashes, n, resultsDb = None):
-    outputCounter = 0
-    batchCount = len(defenseHashes) * n
-    totalSimulations = len(attackHashes) * batchCount
-    stepCount = int(totalSimulations / 10)
-    if(stepCount < 100000): stepCount = 100000
-    
-    if(resultsDb is None):
-        resultsDb = {}
+    versus = {}
+    versus["hash"] = defenseHashes
 
-    print("running simulation matrix with " + str(len(attackHashes)) + "x" + str(len(defenseHashes)) + "x" + str(n) + "=" + str(totalSimulations) + " simulations left")
-    for attackHash in attackHashes:
-        if(outputCounter >= stepCount or outputCounter == 0):
-            print("simulations remaining: \t" + str(totalSimulations))
-            outputCounter -= stepCount
-        outputCounter += batchCount
-        totalSimulations -= batchCount
-        resultsDb = runSimulationsAgainstDefenses(attackHash, defenseHashes, n, resultsDb)
-        
-    return resultsDb
+    return runMatrix(attackHashes, versus, n, False, False, resultsDb)
