@@ -17,20 +17,14 @@ import cardLoader
 import simulator
 
 def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds):
-    #dataDirectory = args.outputDir + args.prefix + "/" #TODO verify directory exists
-    #enemyHashes = versus["hash"]
-
-    useDefenseFile = args.defenseFile != None
-    sortInDeckHash = not(args.ordered == 1)
-    
-    #if(useDefenseFile):
-    #    enemyHashes = cardLoader.loadHashesFromFile(args.defenseFile)
-
-    print("Starting step " + str(step))
     stepFile = args.outputDir + args.prefix + str(step) + ".txt"
     if(os.path.exists(stepFile)):
-        print("\t... Step " + str(step) + " file found. Skipping...")
+        print("Step " + str(step) + " file found. Skipping...")
         return
+
+    print("Starting step " + str(step))
+
+    sortInDeckHash = not(args.ordered == 1)
 
     replacementOffset = step % len(replacementSets)
     print("\t... replacementOffset: " + str(replacementOffset))
@@ -52,6 +46,10 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
             resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
         #resultsDb = simulator.runMissionGroup(deckHashes, args.missionId, iterationsPerSimulation, ordered, surge, resultsDb)
+        #if(isRaid):
+        #    resultsDb = simulator.runRaidGroup(deckHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
+        #else:
+        #    resultsDb = simulator.runQuestGroup(deckHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
 
     else:
         previousFile = args.outputDir + args.prefix + str(step - 1) + ".txt"
@@ -103,6 +101,12 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                     resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
                     resultScores = simulator.getAttackScores(resultsDb, [missionKey], evolvedHashes, False)
 
+                #if(isRaid):
+                #    resultsDb = simulator.runRaidGroup(evolvedHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
+                #else:
+                #    resultsDb = simulator.runQuestGroup(evolvedHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
+                #resultScores = simulator.getAttackScores(resultsDb, [str(raidId)], evolvedHashes, False)
+
                 resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
                 previousHashes[oldHash_i] = resultScores[0][0]
                 intermediateSteps.append(resultScores[0])
@@ -125,6 +129,8 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         missionKey = resultsDatabase.deckKey("mission", missionId)
         resultScores = simulator.getAttackScores(resultsDb, [missionKey], None, False)
 
+    #resultScores = simulator.getAttackScores(resultsDb, [str(raidId)], None, False)
+
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     #outputFile = filePrefix + str(step) + ".txt"
@@ -141,6 +147,7 @@ def main():
     argParser.add_argument('-o', '--ordered', type=int, default=0, help='ordered deck')
     argParser.add_argument('-O', '--owned', type=int, default=0, help='use owned cards as a filter')
     argParser.add_argument('-p', '--prefix', default='evolution', help='name for evolution set')
+    argParser.add_argument('-r', '--raidId', type=int, help='id of raid to target')
     argParser.add_argument('-s', '--surge', type=int, default=0, help='attack deck surges')
     argParser.add_argument('--cardsFile', default='cards.xml', help='file containing card xml data')
     argParser.add_argument('--defenseFile', help='file containing defense decks')
@@ -171,15 +178,26 @@ def main():
 
     #args line
 
-    #if(args.prefix == 'default'):
-    #    args.prefix = "mission"
-    #    args.prefix += "%02d" % args.missionId
-    #    if(args.ordered):
-    #        args.prefix += "o"
-    #    if(args.surge):
-    #        args.prefix += "s"
+    if(args.prefix == 'default'):
+        if(args.missionId != None):
+            args.prefix = "mission%02d" % args.missionId
+        elif(args.raidId != None):
+            args.prefix = "raid%02d" % args.raidId
+        #elif(args.questId != None):
+        #    filePrefix = "quest%02d" % args.questId
 
-    #args.outputDir += "missions/"
+        if(args.ordered):
+            args.prefix += "o"
+        if(args.surge):
+            args.prefix += "s"
+
+    if(args.missionId != None):
+        args.outputDir += "missions/"
+    elif(args.raidId != None):
+        args.outputDir += "raids/"
+    elif(args.questId != None):
+        args.outputDir += "quests/"
+
     args.outputDir += args.prefix + "/" #TODO verify directory exists
     
     args.prefix += "_"
