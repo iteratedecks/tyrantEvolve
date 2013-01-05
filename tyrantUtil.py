@@ -58,7 +58,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         previousHashes = cardLoader.loadHashesFromFile(previousFile, 1)
 
         for evolve_i in range(0, 11):
-            if(args.ignoreCommanders):
+            if((evolve_i == 0) and args.ignoreCommanders):
                 continue
 
             print("\t... index " + str(evolve_i))
@@ -87,11 +87,11 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
-                        attackHashes = versus["hash"]
-                        defenseHashes = evolvedHashes
-                    else:
                         attackHashes = evolvedHashes
                         defenseHashes = versus["hash"]
+                    else:
+                        attackHashes = versus["hash"]
+                        defenseHashes = evolvedHashes
                     resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
                     resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
