@@ -104,7 +104,7 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
 
     return attackScores.values()
 
-def runAttackGroup(groupArgs, attackHashes, versusId, resultsDb):
+def runAttackGroup(groupArgs, attackHashes, versusKey, resultsDb):
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
     regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
@@ -113,8 +113,9 @@ def runAttackGroup(groupArgs, attackHashes, versusId, resultsDb):
     simulationCap = 10000
 
     for attackHash in attackHashes:
-        if((versusId in resultsDb) and (attackHash in resultsDb[versusId]) and (resultsDb[versusId][attackHash][0] >= simulationCap)):
-            print("Skipping " + attackHash + " \tversus " + versusId)
+        attackKey = resultsDatabase.deckKey("hash", attackHash)
+        if((versusKey in resultsDb) and (attackKey in resultsDb[versusKey]) and (resultsDb[versusKey][attackKey][0] >= simulationCap)):
+            print("Skipping " + attackKey + " \tversus " + versusKey)
             continue
 
         attackArgs = list(groupArgs)
@@ -122,7 +123,7 @@ def runAttackGroup(groupArgs, attackHashes, versusId, resultsDb):
         result = runSimulation(attackArgs)
 
         simResults = resultRegex.match(result).groups()
-        resultsDatabase.recordResults(str(versusId), attackHash, simResults, resultsDb)
+        resultsDatabase.recordResults(versusKey, attackKey, simResults, resultsDb)
 
     return resultsDb
 
@@ -154,7 +155,9 @@ def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, res
 
             groupArgs = list(args)
             groupArgs = simulatorArgsAddVersus(groupArgs, versusType, versusId)
-            resultsDb = runAttackGroup(groupArgs, attackHashes, versusId, resultsDb)
+
+            versusKey = resultsDatabase.deckKey(versusType, versusId)
+            resultsDb = runAttackGroup(groupArgs, attackHashes, versusKey, resultsDb)
 
             versusCounter = versusCounter + 1
 
