@@ -1,45 +1,39 @@
 import argparse
 import deckHasher
 
+# This regex works to translate Kong image links into BBCode image links
+# .*"!([^!]+)!":([^=]+=(.*))$
+# [tr][td]\3[/td][td][url=\2][img]\1[/img][/url][/td][/tr]
+
 argParser = argparse.ArgumentParser(description='Output a basic HTML page with links to Fansite decks')
 argParser.add_argument('-c', '--cardsFile', default='cards.xml', help='file containing card xml data')
-argParser.add_argument('-d', '--dataDir', default='evolution/data/', help='directory holding the deck data')
 argParser.add_argument('-l', '--linkPrefix', default='http://tyrant.40in.net/kg/deck.php?nid=', help='URL prefix')
-argParser.add_argument('-p', '--dataPrefix', default='evolution', help='prefix for files to parse')
-argParser.add_argument('startStep', type=int, default=0, help='start from this evolution step')
-argParser.add_argument('endStep', type=int, default=2, help='end at this evolution step (exclusive)')
+
+argParser.add_argument('file', help='File containing decks to image')
 
 args = argParser.parse_args()
 
 cardsFile = args.cardsFile
-filePrefex = args.dataPrefix
 linkPrefex = args.linkPrefix
-dataDirectory = args.dataDir + filePrefex + "/"
-evolutionStart = args.startStep
-evolutionEnd = args.endStep
+files = [args.file]
+
 evolutions = []
 '''
 for step in range(evolutionStart, evolutionEnd):
     stepStart = str(step)
     previousFile = dataDirectory + filePrefex + stepStart + ".txt"
 '''
-for step in range(0,1):
-    previousFile = "evolution/data/factions/Blue_Note20121012.txt"
+for file in files:
     try:
-        f = open(previousFile, 'r')
+        f = open(file, 'r')
     except IOError as e:
         continue
-    hashesFound = -1 # we are 0 indexed
     for line in f:
         line = line.strip()
         if(len(line) == 0 or line[0] == "#"): continue
 
         previousHash = line.split('\t')[0]
-        hashesFound += 1
-        if(step == evolutionStart):
-            evolutions.append([previousHash])
-        else:
-            evolutions[hashesFound].append(previousHash)
+        evolutions.append([previousHash])
     f.close()
 
 print("<html><body>")
