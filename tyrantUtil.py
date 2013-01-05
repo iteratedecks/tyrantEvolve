@@ -101,11 +101,17 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                     resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
                     resultScores = simulator.getAttackScores(resultsDb, [missionKey], evolvedHashes, False)
 
-                #if(isRaid):
-                #    resultsDb = simulator.runRaidGroup(evolvedHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
-                #else:
-                #    resultsDb = simulator.runQuestGroup(evolvedHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
-                #resultScores = simulator.getAttackScores(resultsDb, [str(raidId)], evolvedHashes, False)
+                if("raid" in versus and len(versus["raid"]) > 0):
+                    raidId = versus["mission"][0]
+                    raidKey = resultsDatabase.deckKey("raid", raidId)
+                    resultsDb = simulator.runRaidGroup(evolvedHashes, raidId, args.numSims, args.ordered, resultsDb)
+                    resultScores = simulator.getAttackScores(resultsDb, raidKey, evolvedHashes, False)
+
+                if("quest" in versus and len(versus["quest"]) > 0):
+                    questId = versus["quest"][0]
+                    questKey = resultsDatabase.deckKey("quest", questId)
+                    resultsDb = simulator.runQuestGroup(evolvedHashes, questId, args.numSims, args.ordered, resultsDb)
+                    resultScores = simulator.getAttackScores(resultsDb, questKey, evolvedHashes, False)
 
                 resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
                 previousHashes[oldHash_i] = resultScores[0][0]
@@ -129,11 +135,18 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         missionKey = resultsDatabase.deckKey("mission", missionId)
         resultScores = simulator.getAttackScores(resultsDb, [missionKey], None, False)
 
-    #resultScores = simulator.getAttackScores(resultsDb, [str(raidId)], None, False)
+    if("raid" in versus and len(versus["raid"]) > 0):
+        raidId = versus["raid"][0]
+        raidKey = resultsDatabase.deckKey("raid", raidId)
+        resultScores = simulator.getAttackScores(resultsDb, [raidKey], None, False)
+
+    if("quest" in versus and len(versus["quest"]) > 0):
+        questId = versus["quest"][0]
+        questKey = resultsDatabase.deckKey("quest", questId)
+        resultScores = simulator.getAttackScores(resultsDb, [questKey], None, False)
 
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
-    #outputFile = filePrefix + str(step) + ".txt"
     deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
 
 def main():
