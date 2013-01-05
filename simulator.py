@@ -123,7 +123,7 @@ def runGroup(groupArgs, attackHashes, versusId, resultsDb):
 
     return resultsDb
 
-def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
+def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, resultsDb = None):
     args = simulatorArgsBase()
     args = simulatorArgsAddSeed(args)
     args = simulatorArgsAddNumSims(args, n)
@@ -131,38 +131,31 @@ def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
     if(ordered):
         args = simulatorArgsAddOrdered(args);
 
-    versusType = "quest"
-    args = simulatorArgsAddVersus(args, versusType, questId)
+    for versusType in versus:
+        versusIds = versus[versusType]
+        for versusId in versusIds:
+            args = simulatorArgsAddVersus(args, versusType, versusId)
+            resultsDb = runGroup(args, attackHashes, versusId, resultsDb)
 
-    return runGroup(args, attackHashes, questId, resultsDb)
+    return resultsDb
+
+def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
+    versus = {}
+    versus["quest"] = [questId]
+
+    return runMatrix(attackHashes, versus, n, ordered, False, resultsDb)
 
 def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, resultsDb = None):    
-    args = simulatorArgsBase(attackHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddNumSims(args, n)
+    versus = {}
+    versus["mission"] = [missionId]
 
-    if(ordered):
-        args = simulatorArgsAddOrdered(args);
-    if(surge):
-        args = simulatorArgsAddSurge(args);
-
-    versusType = "mission"
-    args = simulatorArgsAddVersus(args, versusType, missionId)
-
-    return runGroup(args, attackHashes, missionId, resultsDb)
+    return runMatrix(attackHashes, versus, n, ordered, surge, resultsDb)
 
 def runRaidGroup(attackHashes, raidId, n, ordered = False, resultsDb = None):
-    args = simulatorArgsBase(attackHash)
-    args = simulatorArgsAddSeed(args)
-    args = simulatorArgsAddNumSims(args, n)
+    versus = {}
+    versus["raid"] = [raidId]
 
-    if(ordered):
-        args = simulatorArgsAddOrdered(args);
-    
-    versusType = "raid"
-    args = simulatorArgsAddVersus(args, versusType, raidId)
-
-    return runGroup(args, attackHashes, raidId, resultsDb)
+    return runMatrix(attackHashes, versus, n, ordered, False, resultsDb)
 
 def runSimulation(args):
     result = subprocess.check_output(args)
