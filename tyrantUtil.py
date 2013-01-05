@@ -160,6 +160,7 @@ def main():
     argParser.add_argument('-o', '--ordered', type=int, default=0, help='ordered deck')
     argParser.add_argument('-O', '--owned', type=int, default=0, help='use owned cards as a filter')
     argParser.add_argument('-p', '--prefix', default='evolution', help='name for evolution set')
+    argParser.add_argument('-Q', '--questId', type=int, help='id of quest to target; note that this typically matches Quest Step')
     argParser.add_argument('-r', '--raidId', type=int, help='id of raid to target')
     argParser.add_argument('-s', '--surge', type=int, default=0, help='attack deck surges')
     argParser.add_argument('--cardsFile', default='cards.xml', help='file containing card xml data')
