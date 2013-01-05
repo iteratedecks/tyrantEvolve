@@ -15,28 +15,36 @@ def simulatorArgsBase(attackHash = None, defenseHash = None, path = simulatorPat
     return args
 
 def simulatorArgsAddHash(args, deckHash):
-    return args.append(attackHash)
+    args.append(deckHash)
+    return args
 
 def simulatorArgsAddMission(args, missionId):
-    return args.extend(["-m", str(missionId)]);
+    args.extend(["-m", str(missionId)])
+    return args
 
 def simulatorArgsAddNumSims(args, n):
-    return args.extend(["-n", str(n)]);
+    args.extend(["-n", str(n)])
+    return args
 
 def simulatorArgsAddOrdered(args):
-    return args.extend(["-o"]);
+    args.extend(["-o"])
+    return args
 
 def simulatorArgsAddQuest(args, questId):
-    return args.extend(["-Q", str(questId)]);
+    args.extend(["-Q", str(questId)])
+    return args
 
 def simulatorArgsAddRaid(args, raidId):
-    return args.extend(["-r", str(raidId)]);
+    args.extend(["-r", str(raidId)])
+    return args
 
 def simulatorArgsAddSeed(args):
-    return args.extend(["--seed"]);
+    args.extend(["--seed"])
+    return args
 
 def simulatorArgsAddSurge(args):
-    return args.extend(["-s"]);
+    args.extend(["-s"])
+    return args
 
 def simulatorArgsAddVersus(args, versusType, versusId):
     if(versusType == "quest"):
