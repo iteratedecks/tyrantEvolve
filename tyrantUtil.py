@@ -85,11 +85,11 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
-                        attackHashes = evolvedHashes
-                        defenseHashes = versus["hash"]
-                    else:
                         attackHashes = versus["hash"]
                         defenseHashes = evolvedHashes
+                    else:
+                        attackHashes = evolvedHashes
+                        defenseHashes = versus["hash"]
                     resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
                     resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
@@ -125,9 +125,9 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
     resultScores = None
     if("hash" in versus and len(versus["hash"]) > 0):
         if(args.defense):
-            resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
-        else:
             resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
+        else:
+            resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
         resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
 
     if("mission" in versus and len(versus["mission"]) > 0):
@@ -175,7 +175,7 @@ def main():
     args = argParser.parse_args()
     
     startStep = args.startStep
-    endStep = args.stepCount + startStep
+    endStep = args.stepCount + startStep + 1
 
     cards = cardLoader.loadCardsWithArgs(args)
     

@@ -60,7 +60,7 @@ def simulatorArgsAddVersus(args, versusType, versusId):
 def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False):
     useAllAttackHashes = (attackHashes is None)
     if(defenseHashes is None):
-        defenseHashes = resultsDb.keys();
+        defenseHashes = resultsDb.keys()
 
     attackScores = {}
     resultHash = None
@@ -74,6 +74,7 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
             resultHash = defenseHash
         if(useAllAttackHashes):
             attackHashes = results.keys()
+
         for attackHash in attackHashes:
             if(not attackHash in results):
                 print("Warning: " + attackHash + " has no results for " + defenseHash)
@@ -104,30 +105,7 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
 
     return attackScores.values()
 
-def runAttackGroup(groupArgs, attackHashes, versusKey, resultsDb):
-    regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
-    regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
-    regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
-    resultRegex = re.compile(regexString)
-
-    simulationCap = 10000
-
-    for attackHash in attackHashes:
-        attackKey = resultsDatabase.deckKey("hash", attackHash)
-        if((versusKey in resultsDb) and (attackKey in resultsDb[versusKey]) and (resultsDb[versusKey][attackKey][0] >= simulationCap)):
-            print("Skipping " + attackKey + " \tversus " + versusKey)
-            continue
-
-        attackArgs = list(groupArgs)
-        attackArgs = simulatorArgsAddHash(attackArgs, attackHash)
-        result = runSimulation(attackArgs)
-
-        simResults = resultRegex.match(result).groups()
-        resultsDatabase.recordResults(versusKey, attackKey, simResults, resultsDb)
-
-    return resultsDb
-
-def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, resultsDb = None):
+def runMatrix(attackHashes, defenseMatrix, n, ordered = False, surge = False, resultsDb = None):
     
     if(resultsDb is None):
         resultsDb = {}
@@ -141,25 +119,48 @@ def runMatrix(attackHashes, versusMatrix, n, ordered = False, surge = False, res
 
     attackCount = len(attackHashes)
 
-    for versusType in versusMatrix:
-        versusIds = versusMatrix[versusType]
+    regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
+    regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
+    regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
+    resultRegex = re.compile(regexString)
 
-        versusCounter = 0
-        versusCount = len(versusIds)
+    simulationCap = 10000
 
-        print("starting " + versusType + " matrix... ")
+    for defenseType in defenseMatrix:
+        print("starting " + defenseType + " matrix... ")
+        defenseIds = defenseMatrix[defenseType]
 
-        for versusId in versusIds:
-            totalSimulations = attackCount * (versusCount - versusCounter) * n
-            print("\t" + str(versusCount - versusCounter) + "x" + str(attackCount) + "x" + str(n) + "=" + str(totalSimulations) + " simulations left")
+        defenseCounter = 0
+        defenseCount = len(defenseIds)
 
-            groupArgs = list(args)
-            groupArgs = simulatorArgsAddVersus(groupArgs, versusType, versusId)
+        # attack loop must go first because the simulator takes ATTACKHASH DEFENSEHASH
+        for attackHash in attackHashes:
+            attackKey = resultsDatabase.deckKey("hash", attackHash)
+            attackArgs = list(args)
+            attackArgs = simulatorArgsAddHash(attackArgs, attackHash)
 
-            versusKey = resultsDatabase.deckKey(versusType, versusId)
-            resultsDb = runAttackGroup(groupArgs, attackHashes, versusKey, resultsDb)
+            print("\tstarting attack group with attackKey " + attackKey)
 
-            versusCounter = versusCounter + 1
+            for defenseId in defenseIds:
+                #totalSimulations = attackCount * (defenseCount - defenseCounter) * n
+                #print("\t" + str(defenseCount - defenseCounter) + "x" + str(attackCount) + "x" + str(n) + "=" + str(totalSimulations) + " simulations left")
+
+                defenseArgs = list(attackArgs)
+                defenseArgs = simulatorArgsAddVersus(defenseArgs, defenseType, defenseId)
+
+                defenseKey = resultsDatabase.deckKey(defenseType, defenseId)
+
+                if((defenseKey in resultsDb) and (attackKey in resultsDb[defenseKey]) and (resultsDb[defenseKey][attackKey][0] >= simulationCap)):
+                    print("Skipping " + attackKey + " \tdefense " + defenseKey)
+                    continue
+
+                #print("\t\trunning " + attackKey + " vs \t" + defenseKey)
+                result = runSimulation(defenseArgs)
+
+                simResults = resultRegex.match(result).groups()
+                resultsDatabase.recordResults(defenseKey, attackKey, simResults, resultsDb)
+
+            #defenseCounter = defenseCounter + 1
 
     return resultsDb
 
