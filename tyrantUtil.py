@@ -6,6 +6,7 @@ from operator import itemgetter
 import os
 import random
 import re
+import resultsDatabase
 import subprocess
 import xml.sax
 
@@ -17,7 +18,7 @@ import simulator
 
 def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds):
     #dataDirectory = args.outputDir + args.prefix + "/" #TODO verify directory exists
-    enemyHashes = versus["hash"]
+    #enemyHashes = versus["hash"]
 
     useDefenseFile = args.defenseFile != None
     sortInDeckHash = not(args.ordered == 1)
@@ -40,13 +41,13 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
             randomDeck = deckBuilder.randomDeck(commanderIds, playedIds, legendaryIds, uniqueIds)
             deckHashes.append(deckHasher.deckToHash(randomDeck, sortInDeckHash))
 
-        if(len(enemyHashes) > 0):
+        if("hash" in versus and len(versus["hash"]) > 0):
             if(args.defense):
-                attackHashes = enemyHashes
+                attackHashes = versus["hash"]
                 defenseHashes = deckHashes
             else:
                 attackHashes = deckHashes
-                defenseHashes = enemyHashes
+                defenseHashes = versus["hash"]
             resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
             resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
@@ -84,16 +85,23 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
 
-                if(args.defense):
-                    attackHashes = enemyHashes
-                    defenseHashes = evolvedHashes
-                else:
-                    attackHashes = evolvedHashes
-                    defenseHashes = enemyHashes
-                resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
-                resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
+                if("hash" in versus and len(versus["hash"]) > 0):
+                    if(args.defense):
+                        attackHashes = versus["hash"]
+                        defenseHashes = evolvedHashes
+                    else:
+                        attackHashes = evolvedHashes
+                        defenseHashes = versus["hash"]
+                    resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
+                    resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
-                #resultsDb = simulator.runMissionGroup(evolvedHashes, args.missionId, iterationsPerSimulation, args.ordered, args.surge, resultsDb)
+                #TODO resultsScores currently clashes with other sim types
+                if("mission" in versus and len(versus["mission"]) > 0):
+                    #TODO all this key conversion stuff should get rolled into getAttackScores...
+                    missionId = versus["mission"][0]
+                    missionKey = resultsDatabase.deckKey("mission", missionId)
+                    resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
+                    resultScores = simulator.getAttackScores(resultsDb, [missionKey], evolvedHashes, False)
 
                 resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
                 previousHashes[oldHash_i] = resultScores[0][0]
@@ -105,12 +113,18 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
     # recalculate the scores against the new best
     resultScores = None
-    if(args.defense):
-        resultScores = simulator.getAttackScores(resultsDb, None, enemyHashes, args.defense)
-    else:
-        resultScores = simulator.getAttackScores(resultsDb, enemyHashes, None, args.defense)
-    #resultScores = simulator.getAttackScores(resultsDb, [str(args.missionId)], None, False)
-    resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+    if("hash" in versus and len(versus["hash"]) > 0):
+        if(args.defense):
+            resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
+        else:
+            resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
+        resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+
+    if("mission" in versus and len(versus["mission"]) > 0):
+        missionId = versus["mission"][0]
+        missionKey = resultsDatabase.deckKey("mission", missionId)
+        resultScores = simulator.getAttackScores(resultsDb, [missionKey], None, False)
+
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     #outputFile = filePrefix + str(step) + ".txt"
@@ -122,7 +136,7 @@ def main():
     argParser.add_argument('-c', '--ignoreCommanders', default=0, help='skip over commander index')
     argParser.add_argument('-d', '--numDecks', type=int, default=10, help='number of decks to evolve')
     argParser.add_argument('-D', '--defense', type=int, default=0, help='start on defense (1) or offense (0)')
-    argParser.add_argument('-m', '--missionId', type=int, default=1, help='id of mission to target; note that this is different than "mission 190"')
+    argParser.add_argument('-m', '--missionId', type=int, help='id of mission to target; note that this is different than "mission 190"')
     argParser.add_argument('-n', '--numSims', type=int, default=100, help='number of simulations per comparison')
     argParser.add_argument('-o', '--ordered', type=int, default=0, help='ordered deck')
     argParser.add_argument('-O', '--owned', type=int, default=0, help='use owned cards as a filter')
@@ -170,11 +184,13 @@ def main():
     
     args.prefix += "_"
 
-    enemyHashes = []
-    if(args.defenseFile != None):
-        enemyHashes = cardLoader.loadHashesFromFile(args.defenseFile)
     versus = {}
-    versus["hash"] = enemyHashes
+
+    if(args.defenseFile != None):
+        versus["hash"] = cardLoader.loadHashesFromFile(args.defenseFile)
+
+    if(args.missionId != None):
+        versus["mission"] = [args.missionId]
 
     resultsDb = {}
     for step in range(startStep, endStep):
