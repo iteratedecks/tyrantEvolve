@@ -27,27 +27,12 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
     deckHashes = []
     if step == 0:
-        for deck_i in range(0, 1):
+        deckCount = 10 # how many random decks to start from
+        for deck_i in range(0, deckCount):
             randomDeck = deckBuilder.randomDeck(commanderIds, playedIds, legendaryIds, uniqueIds)
             deckHashes.append(deckHasher.deckToHash(randomDeck, sortInDeckHash))
 
-        if("hash" in versus and len(versus["hash"]) > 0):
-            if(args.defense):
-                attackHashes = versus["hash"]
-                defenseHashes = deckHashes
-            else:
-                attackHashes = deckHashes
-                defenseHashes = versus["hash"]
-            resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
-            resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
-
-        if("mission" in versus and len(versus["mission"]) > 0):
-            #TODO all this key conversion stuff should get rolled into getAttackScores...
-            missionId = versus["mission"][0]
-            missionKey = resultsDatabase.deckKey("mission", missionId)
-            #print("found a mission: " + missionKey)
-            resultsDb = simulator.runMissionGroup(deckHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
-            resultScores = simulator.getAttackScores(resultsDb, [missionKey], deckHashes, False)
+        resultScores = simulator.runVersusMatrix(versus, deckHashes, resultsDb, args.numSims, args.defense, args.ordered, args.surge)
 
     else:
         previousFile = args.outputDir + args.prefix + str(step - 1) + ".txt"
@@ -89,7 +74,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
         deckHashes = list(previousHashes)
 
-    resultScores = simulator.getVersusScores(resultsDb, evolvedHashes, versus, args.defense)
+    resultScores = simulator.getVersusScores(resultsDb, None, versus, args.defense)
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)

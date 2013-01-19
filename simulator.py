@@ -59,13 +59,13 @@ def simulatorArgsAddVersus(args, versusType, versusId):
     return args
 
 def getVersusScores(resultsDb, evolvedHashes, versus, defense = False):
-    attackKeys = None
+    attackKeys = evolvedHashes
     defenseKeys = resultsDatabase.getVersusKeys(versus)
     resultScores = None
     if("hash" in versus and len(versus["hash"]) > 0):
         if(defense):
-            attackKeys = evolvedHashes
-            defenseKeys = None
+            attackKeys = defenseKeys
+            defenseKeys = evolvedHashes
 
     resultScores = getAttackScores(resultsDb, defenseKeys, attackKeys, defense)
     resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
@@ -203,4 +203,4 @@ def runVersusMatrix(versus, evolvedHashes, resultsDb, numSims, defense = False, 
     #defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
     #resultScores = getAttackScores(resultsDb, defenseKeys, attackKeys, defense)
     #resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
-    return getVersusScores(resultsDb, evolvedHashes, versus, defense)
+    return getVersusScores(resultsDb, None, versus, defense)
