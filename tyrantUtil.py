@@ -1,7 +1,7 @@
 import argparse
 from collections import Counter
 import math
-import numpy
+#import numpy
 from operator import itemgetter
 import os
 import random
@@ -45,11 +45,13 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
             resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
             resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
-        #resultsDb = simulator.runMissionGroup(deckHashes, args.missionId, iterationsPerSimulation, ordered, surge, resultsDb)
-        #if(isRaid):
-        #    resultsDb = simulator.runRaidGroup(deckHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
-        #else:
-        #    resultsDb = simulator.runQuestGroup(deckHashes, raidId, iterationsPerSimulation, ordered, resultsDb)
+        if("mission" in versus and len(versus["mission"]) > 0):
+            #TODO all this key conversion stuff should get rolled into getAttackScores...
+            missionId = versus["mission"][0]
+            #print("found a mission: " + str(missionId))
+            missionKey = resultsDatabase.deckKey("mission", missionId)
+            resultsDb = simulator.runMissionGroup(deckHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
+            resultScores = simulator.getAttackScores(resultsDb, [missionKey], deckHashes, False)
 
     else:
         previousFile = args.outputDir + args.prefix + str(step - 1) + ".txt"
@@ -82,6 +84,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                         evolvedDecks.extend(deckBuilder.orderSwap(evolvedDeck, evolve_i, range(swap_index, swap_index + 1)))
 
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
+                evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
 
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
@@ -97,6 +100,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 if("mission" in versus and len(versus["mission"]) > 0):
                     #TODO all this key conversion stuff should get rolled into getAttackScores...
                     missionId = versus["mission"][0]
+                    #print("found a mission: " + str(missionId))
                     missionKey = resultsDatabase.deckKey("mission", missionId)
                     resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
                     resultScores = simulator.getAttackScores(resultsDb, [missionKey], evolvedHashes, False)
@@ -128,7 +132,6 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
             resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
         else:
             resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
-        resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
 
     if("mission" in versus and len(versus["mission"]) > 0):
         missionId = versus["mission"][0]
@@ -145,6 +148,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         questKey = resultsDatabase.deckKey("quest", questId)
         resultScores = simulator.getAttackScores(resultsDb, [questKey], None, False)
 
+    resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
@@ -159,7 +163,7 @@ def main():
     argParser.add_argument('-n', '--numSims', type=int, default=100, help='number of simulations per comparison')
     argParser.add_argument('-o', '--ordered', type=int, default=0, help='ordered deck')
     argParser.add_argument('-O', '--owned', type=int, default=0, help='use owned cards as a filter')
-    argParser.add_argument('-p', '--prefix', default='evolution', help='name for evolution set')
+    argParser.add_argument('-p', '--prefix', default='default', help='name for evolution set')
     argParser.add_argument('-Q', '--questId', type=int, help='id of quest to target; note that this typically matches Quest Step')
     argParser.add_argument('-r', '--raidId', type=int, help='id of raid to target')
     argParser.add_argument('-s', '--surge', type=int, default=0, help='attack deck surges')
@@ -215,6 +219,8 @@ def main():
     args.outputDir += args.prefix + "/" #TODO verify directory exists
     
     args.prefix += "_"
+
+    print("using prefix: " + args.prefix)
 
     versus = {}
 
