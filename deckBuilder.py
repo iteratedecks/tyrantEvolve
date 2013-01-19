@@ -4,24 +4,6 @@ import random
 
 CardLists = namedtuple("CardLists", ['commanders', 'played', 'legendaries', 'uniques'])
 
-'''
-class CardCollection():
-    def __init__(self, commanders, played, legendaries, uniques):
-        self.commanders = commanders
-        self.played = played
-        self.legendaries = legendaries
-        self.uniques = uniques
-
-    def __init__(self, cards):
-        assaultIds = set([card.id for card in cards if card.id < 1000])
-        self.commanders = set([card.id for card in cards if (card.id > 1000 and card.id < 2000)])
-        structureIds = set([card.id for card in cards if (card.id > 2000 and card.id < 3000)])
-        commonIds = set([card.id for card in cards if card.rarity == 1])
-        self.legendaries = set([card.id for card in cards if card.rarity == 4])
-        self.uniques = set([card.id for card in cards if card.unique != 0])
-        self.played = assaultIds | structureIds
-'''
-
 def randomDeck(commanders, cards, legendaries, uniques):
     #commanders = cardLists.commanders
     #cards = cardLists.played
@@ -53,7 +35,9 @@ def orderSwap(oldDeck, index, targetRange = None):
     newDecks = []
     for old_i in targetRange:
         if(old_i == index):
-            continue;
+            continue
+        if(oldDeck[old_i] == oldDeck[index]): # skip if they already match
+            continue
         newDeck = list(oldDeck)
         newDeck[old_i] = oldDeck[index]
         newDeck[index] = oldDeck[old_i]

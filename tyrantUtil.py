@@ -74,9 +74,9 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 evolvedDecks.extend(deckBuilder.deckEvolutionsForIndex(evolvedDeck, evolve_i, replacements))
                 if(args.ordered and evolve_i > 0):
                     swap_index = (evolve_i + step) % 10 + 1
-                    if(swap_index != evolve_i):
-                        #print("swapping " + str(evolve_i) + " for " + str(swap_index))
-                        evolvedDecks.extend(deckBuilder.orderSwap(evolvedDeck, evolve_i, range(swap_index, swap_index + 1)))
+                    #if(swap_index != evolve_i):
+                    #print("swapping " + str(evolve_i) + " for " + str(swap_index))
+                    evolvedDecks.extend(deckBuilder.orderSwap(evolvedDeck, evolve_i, range(swap_index, swap_index + 1)))
 
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
                 evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
