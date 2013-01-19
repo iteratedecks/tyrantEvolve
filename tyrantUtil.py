@@ -139,14 +139,7 @@ def main():
     ###args line
 
     tyrantArgs.processPrefix(args)
-
-    versus = {}
-
-    if(args.defenseFile != None):
-        versus["hash"] = cardLoader.loadHashesFromFile(args.defenseFile)
-
-    if(args.missionId != None):
-        versus["mission"] = [args.missionId]
+    versus = tyrantArgs.getVersus(args)
 
     resultsDb = {}
     stepsRemaining = args.stepCount

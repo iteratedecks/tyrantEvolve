@@ -68,3 +68,14 @@ def processPrefix(args):
     args.prefix += "_"
     print("using prefix: " + args.prefix)
     #return prefix
+
+def getVersus(args):
+    versus = {}
+
+    if(args.defenseFile != None):
+        versus["hash"] = cardLoader.loadHashesFromFile(args.defenseFile)
+
+    if(args.missionId != None):
+        versus["mission"] = [args.missionId]
+
+    return versus
