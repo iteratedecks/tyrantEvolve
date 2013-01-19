@@ -105,27 +105,15 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         deckHashes = list(previousHashes)
 
     # recalculate the scores against the new best
+    attackKeys = None
+    defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
     resultScores = None
     if("hash" in versus and len(versus["hash"]) > 0):
         if(args.defense):
-            resultScores = simulator.getAttackScores(resultsDb, None, versus["hash"], args.defense)
-        else:
-            resultScores = simulator.getAttackScores(resultsDb, versus["hash"], None, args.defense)
+            attackKeys = evolvedHashes
+            defenseKeys = None
 
-    if("mission" in versus and len(versus["mission"]) > 0):
-        missionId = versus["mission"][0]
-        missionKey = resultsDatabase.deckKey("mission", missionId)
-        resultScores = simulator.getAttackScores(resultsDb, [missionKey], None, False)
-
-    if("raid" in versus and len(versus["raid"]) > 0):
-        raidId = versus["raid"][0]
-        raidKey = resultsDatabase.deckKey("raid", raidId)
-        resultScores = simulator.getAttackScores(resultsDb, [raidKey], None, False)
-
-    if("quest" in versus and len(versus["quest"]) > 0):
-        questId = versus["quest"][0]
-        questKey = resultsDatabase.deckKey("quest", questId)
-        resultScores = simulator.getAttackScores(resultsDb, [questKey], None, False)
+    resultScores = simulator.getAttackScores(resultsDb, defenseKeys, attackKeys, args.defense)
 
     resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
     if(len(resultScores) > 20):
