@@ -170,30 +170,7 @@ def runMatrix(attackHashes, defenseMatrix, n, ordered = False, surge = False, re
 
     return resultsDb
 
-def runQuestGroup(attackHashes, questId, n, ordered = False, resultsDb = None):
-    versus = {}
-    versus["quest"] = [questId]
-
-    return runMatrix(attackHashes, versus, n, ordered, False, resultsDb)
-
-def runMissionGroup(attackHashes, missionId, n, ordered = False, surge = False, resultsDb = None):    
-    versus = {}
-    versus["mission"] = [missionId]
-
-    return runMatrix(attackHashes, versus, n, ordered, surge, resultsDb)
-
-def runRaidGroup(attackHashes, raidId, n, ordered = False, resultsDb = None):
-    versus = {}
-    versus["raid"] = [raidId]
-
-    return runMatrix(attackHashes, versus, n, ordered, False, resultsDb)
-
 def runSimulation(args):
     result = subprocess.check_output(args)
     return result.decode()
 
-def runSimulationMatrix(attackHashes, defenseHashes, n, resultsDb = None):
-    versus = {}
-    versus["hash"] = defenseHashes
-
-    return runMatrix(attackHashes, versus, n, False, False, resultsDb)
