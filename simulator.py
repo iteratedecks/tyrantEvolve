@@ -69,6 +69,8 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
             print("Warning: " + defenseHash + " is not in results")
             continue
 
+        #print("defenseHash: '" + defenseHash + "'")
+
         results = resultsDb[defenseHash]
         if(scoreDefense):
             resultHash = defenseHash
@@ -79,6 +81,8 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
             if(not attackHash in results):
                 print("Warning: " + attackHash + " has no results for " + defenseHash)
                 continue
+
+            #print("attackHash: '" + attackHash + "'")
 
             if(not scoreDefense):
                 resultHash = attackHash
@@ -100,8 +104,10 @@ def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False
             attackScores[resultHash][5] += losses
             attackScores[resultHash][6] += draws
             #TODO could probably move this after all the numbers were tallied
-            attackScores[resultHash][1] = attackScores[resultHash][2] / attackScores[resultHash][3]
-            attackScores[resultHash].append(score / total)
+            attackScores[resultHash][1] = float(attackScores[resultHash][2]) / attackScores[resultHash][3]
+            #attackScores[resultHash].append(score / total)
+
+            #print("attackScore: '" + "\t".join(map(str, attackScores[resultHash])) + "'")
 
     return attackScores.values()
 
