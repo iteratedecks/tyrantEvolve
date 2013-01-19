@@ -32,3 +32,11 @@ def deckKey(deckType, deckId, ordered = False):
         prefix = prefix + "_"
 
     return prefix + str(deckId)
+
+def getVersusKeys(versus, ordered = False):
+    defenseKeys = []
+    for versusType in versus:
+        targets = versus[versusType]
+        for target in targets:
+            defenseKeys.append(deckKey(versusType, target))
+    return defenseKeys

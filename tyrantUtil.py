@@ -82,40 +82,21 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
 
                 attackKeys = evolvedHashes
-                defenseKeys = None
                 defenseVersus = versus
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
                         attackKeys = versus["hash"]
-                        defenseKeys = evolvedHashes
                         defenseVersus = { "hash": evolvedHashes }
-                    else:
-                        defenseKeys = versus["hash"]
                     #    attackKeys = evolvedHashes
                     #    defenseVersus = versus
                     #resultsDb = simulator.runSimulationMatrix(attackKeys, defenseHashes, args.numSims, resultsDb)
 
-                if("mission" in versus and len(versus["mission"]) > 0):
-                    #TODO all this key conversion stuff should get rolled into getAttackScores...
-                    missionId = versus["mission"][0]
-                    #print("found a mission: " + str(missionId))
-                    missionKey = resultsDatabase.deckKey("mission", missionId)
-                    defenseKeys = [missionKey]
-
-                if("raid" in versus and len(versus["raid"]) > 0):
-                    raidId = versus["mission"][0]
-                    raidKey = resultsDatabase.deckKey("raid", raidId)
-                    defenseKeys = [raidKey]
-
-                if("quest" in versus and len(versus["quest"]) > 0):
-                    questId = versus["quest"][0]
-                    questKey = resultsDatabase.deckKey("quest", questId)
-                    defenseKeys = [questKey]
-
                 resultsDb = simulator.runMatrix(attackKeys, defenseVersus, args.numSims, args.ordered, args.surge, resultsDb)
 
+                defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
                 resultScores = simulator.getAttackScores(resultsDb, defenseKeys, attackKeys, args.defense)
                 resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+
                 previousHashes[oldHash_i] = resultScores[0][0]
                 intermediateSteps.append(resultScores[0])
 
