@@ -59,11 +59,13 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
                 evolvedDecks.extend(deckBuilder.deckEvolutionsForIndex(evolvedDeck, evolve_i, replacements))
                 if(args.ordered and evolve_i > 0):
+                    # we don't really need to try all swaps possible every step;
+                    # over a long run this will cover everything
                     swap_index = (evolve_i + step) % 10 + 1
                     evolvedDecks.extend(deckBuilder.orderSwap(evolvedDeck, evolve_i, range(swap_index, swap_index + 1)))
 
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
-                evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
+                evolvedHashes.append(evolvedHash) # keep simulating the one at the top to keep it honest
 
                 resultScores = simulator.runVersusMatrix(versus, evolvedHashes, resultsDb, args.numSims, args.defense, args.ordered, args.surge)
 
