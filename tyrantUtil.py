@@ -17,11 +17,6 @@ import cardLoader
 import simulator
 
 def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds):
-    stepFile = args.outputDir + args.prefix + str(step) + ".txt"
-    if(os.path.exists(stepFile)):
-        print("Step " + str(step) + " file found. Skipping...")
-        return
-
     print("Starting step " + str(step))
 
     sortInDeckHash = not(args.ordered == 1)
@@ -173,13 +168,13 @@ def main():
     argParser.add_argument('--ignoreCommons', type=int, default=0, help='Do not use commons')
     argParser.add_argument('--outputDir', default='evolution/data/', help='directory to store results')
     argParser.add_argument('--ownedFile', default='wildcard/ownedcards.txt', help='file containing owned cardlist')
-    argParser.add_argument('--startStep', type=int, default=0, help='start from this evolution step')
+    #argParser.add_argument('--startStep', type=int, default=0, help='start from this evolution step')
     argParser.add_argument('stepCount', type=int, default=2, help='end at this evolution step (exclusive)')
 
     args = argParser.parse_args()
     
-    startStep = args.startStep
-    endStep = args.stepCount + startStep + 1
+    #startStep = args.startStep
+    #endStep = args.stepCount + startStep + 1
 
     cards = cardLoader.loadCardsWithArgs(args)
     
@@ -231,7 +226,19 @@ def main():
         versus["mission"] = [args.missionId]
 
     resultsDb = {}
-    for step in range(startStep, endStep):
+    stepsRemaining = args.stepCount
+    step = -1
+    while(stepsRemaining > 0):
+        step = step + 1
+
+        stepFile = args.outputDir + args.prefix + str(step) + ".txt"
+        if(os.path.exists(stepFile)):
+            print("Step " + str(step) + " file found. Skipping...")
+            continue
+
         runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds)
+        stepsRemaining = stepsRemaining - 1
+
+    #print(len(resultsDb['m_347'].keys()))
 
 main()
