@@ -87,8 +87,10 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
                         attackKeys = versus["hash"]
+                        defenseKeys = evolvedHashes
                         defenseVersus = { "hash": evolvedHashes }
-                    #else:
+                    else:
+                        defenseKeys = versus["hash"]
                     #    attackKeys = evolvedHashes
                     #    defenseVersus = versus
                     #resultsDb = simulator.runSimulationMatrix(attackKeys, defenseHashes, args.numSims, resultsDb)
