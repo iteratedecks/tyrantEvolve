@@ -48,8 +48,8 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         if("mission" in versus and len(versus["mission"]) > 0):
             #TODO all this key conversion stuff should get rolled into getAttackScores...
             missionId = versus["mission"][0]
-            #print("found a mission: " + str(missionId))
             missionKey = resultsDatabase.deckKey("mission", missionId)
+            #print("found a mission: " + missionKey)
             resultsDb = simulator.runMissionGroup(deckHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
             resultScores = simulator.getAttackScores(resultsDb, [missionKey], deckHashes, False)
 
