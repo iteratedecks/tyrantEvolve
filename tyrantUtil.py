@@ -81,6 +81,8 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
                 evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
 
+                attackHashes = evolvedHashes
+                defenseHashes = None
                 if("hash" in versus and len(versus["hash"]) > 0):
                     if(args.defense):
                         attackHashes = versus["hash"]
@@ -89,29 +91,28 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                         attackHashes = evolvedHashes
                         defenseHashes = versus["hash"]
                     resultsDb = simulator.runSimulationMatrix(attackHashes, defenseHashes, args.numSims, resultsDb)
-                    resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
 
-                #TODO resultsScores currently clashes with other sim types
                 if("mission" in versus and len(versus["mission"]) > 0):
                     #TODO all this key conversion stuff should get rolled into getAttackScores...
                     missionId = versus["mission"][0]
                     #print("found a mission: " + str(missionId))
                     missionKey = resultsDatabase.deckKey("mission", missionId)
+                    defenseHashes = [missionKey]
                     resultsDb = simulator.runMissionGroup(evolvedHashes, missionId, args.numSims, args.ordered, args.surge, resultsDb)
-                    resultScores = simulator.getAttackScores(resultsDb, [missionKey], evolvedHashes, False)
 
                 if("raid" in versus and len(versus["raid"]) > 0):
                     raidId = versus["mission"][0]
                     raidKey = resultsDatabase.deckKey("raid", raidId)
+                    defenseHashes = [raidKey]
                     resultsDb = simulator.runRaidGroup(evolvedHashes, raidId, args.numSims, args.ordered, resultsDb)
-                    resultScores = simulator.getAttackScores(resultsDb, raidKey, evolvedHashes, False)
 
                 if("quest" in versus and len(versus["quest"]) > 0):
                     questId = versus["quest"][0]
                     questKey = resultsDatabase.deckKey("quest", questId)
+                    defenseHashes = [questKey]
                     resultsDb = simulator.runQuestGroup(evolvedHashes, questId, args.numSims, args.ordered, resultsDb)
-                    resultScores = simulator.getAttackScores(resultsDb, questKey, evolvedHashes, False)
 
+                resultScores = simulator.getAttackScores(resultsDb, defenseHashes, attackHashes, args.defense)
                 resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
                 previousHashes[oldHash_i] = resultScores[0][0]
                 intermediateSteps.append(resultScores[0])
