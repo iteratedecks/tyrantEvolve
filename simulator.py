@@ -1,3 +1,4 @@
+from operator import itemgetter
 import re
 import resultsDatabase
 import subprocess
@@ -56,6 +57,19 @@ def simulatorArgsAddVersus(args, versusType, versusId):
     elif(versusType == "hash"):
         args = simulatorArgsAddHash(args, versusId)
     return args
+
+def getVersusScores(resultsDb, evolvedHashes, versus, defense = False):
+    attackKeys = None
+    defenseKeys = resultsDatabase.getVersusKeys(versus)
+    resultScores = None
+    if("hash" in versus and len(versus["hash"]) > 0):
+        if(defense):
+            attackKeys = evolvedHashes
+            defenseKeys = None
+
+    resultScores = getAttackScores(resultsDb, defenseKeys, attackKeys, defense)
+    resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+    return resultScores
 
 def getAttackScores(resultsDb, defenseHashes, attackHashes, scoreDefense = False):
     useAllAttackHashes = (attackHashes is None)
@@ -174,3 +188,19 @@ def runSimulation(args):
     result = subprocess.check_output(args)
     return result.decode()
 
+def runVersusMatrix(versus, evolvedHashes, resultsDb, numSims, defense = False, ordered = False, surge = False):
+    attackKeys = evolvedHashes
+    defenseVersus = versus
+    if("hash" in versus and len(versus["hash"]) > 0):
+        if(defense):
+            attackKeys = versus["hash"]
+            defenseVersus = { "hash": evolvedHashes }
+        #    attackKeys = evolvedHashes
+        #    defenseVersus = versus
+        #resultsDb = simulator.runSimulationMatrix(attackKeys, defenseHashes, args.numSims, resultsDb)
+
+    resultsDb = runMatrix(attackKeys, defenseVersus, numSims, ordered, surge, resultsDb)
+    #defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
+    #resultScores = getAttackScores(resultsDb, defenseKeys, attackKeys, defense)
+    #resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+    return getVersusScores(resultsDb, evolvedHashes, versus, defense)

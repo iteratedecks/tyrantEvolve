@@ -75,28 +75,12 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
                 evolvedDecks.extend(deckBuilder.deckEvolutionsForIndex(evolvedDeck, evolve_i, replacements))
                 if(args.ordered and evolve_i > 0):
                     swap_index = (evolve_i + step) % 10 + 1
-                    #if(swap_index != evolve_i):
-                    #print("swapping " + str(evolve_i) + " for " + str(swap_index))
                     evolvedDecks.extend(deckBuilder.orderSwap(evolvedDeck, evolve_i, range(swap_index, swap_index + 1)))
 
                 evolvedHashes = [deckHasher.deckToHash(deck, sortInDeckHash) for deck in evolvedDecks]
                 evolvedHashes.append(evolvedHash) # keep refining the one at the top to keep it honest
 
-                attackKeys = evolvedHashes
-                defenseVersus = versus
-                if("hash" in versus and len(versus["hash"]) > 0):
-                    if(args.defense):
-                        attackKeys = versus["hash"]
-                        defenseVersus = { "hash": evolvedHashes }
-                    #    attackKeys = evolvedHashes
-                    #    defenseVersus = versus
-                    #resultsDb = simulator.runSimulationMatrix(attackKeys, defenseHashes, args.numSims, resultsDb)
-
-                resultsDb = simulator.runMatrix(attackKeys, defenseVersus, args.numSims, args.ordered, args.surge, resultsDb)
-
-                defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
-                resultScores = simulator.getAttackScores(resultsDb, defenseKeys, attackKeys, args.defense)
-                resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+                resultScores = simulator.runVersusMatrix(versus, evolvedHashes, resultsDb, args.numSims, args.defense, args.ordered, args.surge)
 
                 previousHashes[oldHash_i] = resultScores[0][0]
                 intermediateSteps.append(resultScores[0])
@@ -105,18 +89,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
 
         deckHashes = list(previousHashes)
 
-    # recalculate the scores against the new best
-    attackKeys = None
-    defenseKeys = resultsDatabase.getVersusKeys(defenseVersus)
-    resultScores = None
-    if("hash" in versus and len(versus["hash"]) > 0):
-        if(args.defense):
-            attackKeys = evolvedHashes
-            defenseKeys = None
-
-    resultScores = simulator.getAttackScores(resultsDb, defenseKeys, attackKeys, args.defense)
-
-    resultScores = sorted(resultScores, key=itemgetter(1), reverse=True)
+    resultScores = simulator.getVersusScores(resultsDb, evolvedHashes, versus, args.defense)
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
     deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
