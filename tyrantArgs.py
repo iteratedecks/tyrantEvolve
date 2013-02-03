@@ -48,8 +48,8 @@ def processPrefix(args):
             args.prefix = "mission%02d" % args.missionId
         elif(args.raidId != None):
             args.prefix = "raid%02d" % args.raidId
-        #elif(args.questId != None):
-        #    filePrefix = "quest%02d" % args.questId
+        elif(args.questId != None):
+            args.prefix = "quest%02d" % args.questId
 
         if(args.ordered):
             args.prefix += "o"
@@ -65,8 +65,8 @@ def processPrefix(args):
 
     args.outputDir += args.prefix + "/" #TODO verify directory exists
     
-    args.prefix += "_"
     print("using prefix: " + args.prefix)
+    args.prefix += "_"
     #return prefix
 
 def getVersus(args):
@@ -77,5 +77,11 @@ def getVersus(args):
 
     if(args.missionId != None):
         versus["mission"] = [args.missionId]
+
+    if(args.questId != None):
+        versus["quest"] = [args.questId]
+
+    if(args.raidId != None):
+        versus["raid"] = [args.raidId]
 
     return versus

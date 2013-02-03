@@ -135,7 +135,10 @@ def runMatrix(attackHashes, defenseMatrix, n, ordered = False, surge = False, re
     args = simulatorArgsAddNumSims(args, n)
 
     if(ordered):
-        args = simulatorArgsAddOrdered(args);
+        args = simulatorArgsAddOrdered(args)
+
+    if(surge):
+        args = simulatorArgsAddSurge(args)
 
     attackCount = len(attackHashes)
 
@@ -159,7 +162,7 @@ def runMatrix(attackHashes, defenseMatrix, n, ordered = False, surge = False, re
             attackArgs = list(args)
             attackArgs = simulatorArgsAddHash(attackArgs, attackHash)
 
-            print("\tstarting attack group with attackKey " + attackKey)
+            #print("\tstarting attack group with attackKey " + attackKey)
 
             for defenseId in defenseIds:
                 #totalSimulations = attackCount * (defenseCount - defenseCounter) * n
