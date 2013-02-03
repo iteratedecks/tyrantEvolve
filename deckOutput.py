@@ -2,7 +2,7 @@ def saveStep(dataDirectory, filePrefix, stepName, resultsMatrix):
     outputString = "# Step " + stepName + "\n"
     outputString += outputStringFromResults(resultsMatrix)
 
-    outputFile = filePrefix + stepName + ".txt"
+    outputFile = filePrefix + "_" + stepName + ".txt"
     
     mkdir_p(dataDirectory)
     f = open(dataDirectory + outputFile, 'w')

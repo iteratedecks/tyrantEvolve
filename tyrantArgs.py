@@ -59,18 +59,25 @@ def processPrefix(args):
         if(args.surge):
             args.prefix += "s"
 
-    if(args.missionId != None):
-        args.outputDir += "missions/"
-    elif(args.raidId != None):
-        args.outputDir += "raids/"
-    elif(args.questId != None):
-        args.outputDir += "quests/"
+        if(args.missionId != None):
+            args.outputDir += "missions/"
+        elif(args.raidId != None):
+            args.outputDir += "raids/"
+        elif(args.questId != None):
+            args.outputDir += "quests/"
 
-    args.outputDir += args.prefix + "/" #TODO verify directory exists
+    #args.outputDir += args.prefix + "/" #TODO verify directory exists
     
     print("using prefix: " + args.prefix)
-    args.prefix += "_"
+    #if(args.prefix[:-1] != "_"):
+    #    args.prefix += "_"
     #return prefix
+
+def getOutputDir(args):
+    return args.outputDir + args.prefix + "/" #TODO verify directory exists
+
+def getOutputFile(args, step):
+    return args.prefix + "_" + str(step) + ".txt"
 
 def getVersus(args):
     versus = {}

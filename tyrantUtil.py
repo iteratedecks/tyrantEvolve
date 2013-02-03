@@ -35,7 +35,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         resultScores = simulator.runVersusMatrix(versus, deckHashes, resultsDb, args.numSims, args.defense, args.ordered, args.surge)
 
     else:
-        previousFile = args.outputDir + args.prefix + str(step - 1) + ".txt"
+        previousFile = tyrantArgs.getOutputDir(args) + tyrantArgs.getOutputFile(args, step - 1)
         previousHashes = cardLoader.loadHashesFromFile(previousFile, 1)
 
         for evolve_i in range(0, 11):
@@ -79,10 +79,12 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
     resultScores = simulator.getVersusScores(resultsDb, None, versus, args.defense)
     if(len(resultScores) > 20):
         resultScores = resultScores[0:20]
-    deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
+    deckOutput.saveStep(tyrantArgs.getOutputDir(args), args.prefix, str(step), resultScores)
 
-def doEvolve(resultsDb = None):
-    args = tyrantArgs.getArgs()
+def doEvolve(resultsDb = None, args = None):
+    if(args is None):
+        args = tyrantArgs.getArgs()
+
     cards = cardLoader.loadCardsWithArgs(args)
     
     ownedCards = []
@@ -109,7 +111,7 @@ def doEvolve(resultsDb = None):
     while(stepsRemaining > 0):
         step = step + 1
 
-        stepFile = args.outputDir + args.prefix + str(step) + ".txt"
+        stepFile = tyrantArgs.getOutputDir(args) + tyrantArgs.getOutputFile(args, step)
         if(os.path.exists(stepFile)):
             print("Step " + str(step) + " file found. Skipping...")
             continue
