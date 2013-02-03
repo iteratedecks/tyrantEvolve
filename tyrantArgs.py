@@ -33,7 +33,7 @@ def getArgs():
     argParser.add_argument('--cardsFile', default='cards.xml', help='file containing card xml data')
     argParser.add_argument('--defenseFile', help='file containing defense decks')
     argParser.add_argument('--ignoreActions', type=int, nargs='?', default=0, help='Do not use action cards')
-    argParser.add_argument('--ignoreCommons', type=int, nargs='?', default=0, help='Do not use commons')
+    argParser.add_argument('--ignoreCommons', type=int, nargs='?', default=1, help='Do not use commons')
     argParser.add_argument('--outputDir', default='evolution/data/', help='directory to store results')
     argParser.add_argument('--ownedFile', default='wildcard/ownedcards.txt', help='file containing owned cardlist')
     #argParser.add_argument('--startStep', type=int, default=0, help='start from this evolution step')

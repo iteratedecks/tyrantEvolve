@@ -156,6 +156,7 @@ def getNotBadExceptions():
     exceptions.add(103) #Tiamat
     exceptions.add(245) #Toxic Cannon
     exceptions.add(865) #Withersnap
+    return exceptions
 
 def getIdsFromCardData(cardData, filter = [], ignoreActions = True, ignoreBad = True):
     baseCardData = [card for card in cardData if card.base_card == 0]
