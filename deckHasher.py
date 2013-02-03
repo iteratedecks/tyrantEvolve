@@ -72,6 +72,9 @@ def deckToHash(idList, sort = False):
     
 # DecodeBase64(x) (((x >= 'A') && (x <= 'Z')) ? (x - 'A') : (((x >= 'a') && (x <= 'z')) ? (x - 'a' + 26) : (((x >= '0') && (x <= '9')) ? (x - '0' + 52) : ((x == '+') ? (62) : (63)))))
 def decodeBase64(x):
+    if (x == '.'):
+        x = '/' # workaround for azure not liking '/'
+
     if (x >= 'A' and x <= 'Z') : return ord(x) - ord('A')
     if (x >= 'a' and x <= 'z') : return ord(x) - ord('a') + 26
     if (x >= '0' and x <= '9') : return ord(x) - ord('0') + 52
