@@ -98,6 +98,7 @@ def updateReplacementsForIndex(replacements, oldDeck, index, uniques, legendarie
         countFilter.subtract(oldDeck)
         filter = set(countFilter.elements())
         countFilter.update(oldDeck)
+        #print(filter)
 
         replacements = replacements & filter
 

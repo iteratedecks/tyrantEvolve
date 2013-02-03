@@ -81,7 +81,7 @@ def runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commande
         resultScores = resultScores[0:20]
     deckOutput.saveStep(args.outputDir, args.prefix, str(step), resultScores)
 
-def main():
+def doEvolve(resultsDb = None):
     args = tyrantArgs.getArgs()
     cards = cardLoader.loadCardsWithArgs(args)
     
@@ -101,7 +101,9 @@ def main():
     tyrantArgs.processPrefix(args)
     versus = tyrantArgs.getVersus(args)
 
-    resultsDb = {}
+    if(resultsDb is None):
+        resultsDb = {}
+
     stepsRemaining = args.stepCount
     step = -1
     while(stepsRemaining > 0):
@@ -117,4 +119,4 @@ def main():
 
     #print(len(resultsDb['m_347'].keys()))
 
-main()
+#doEvolve()
