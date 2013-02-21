@@ -113,9 +113,10 @@ def doEvolve(resultsDb = None, args = None):
 
         stepFile = tyrantArgs.getOutputDir(args) + tyrantArgs.getOutputFile(args, step)
         if(os.path.exists(stepFile)):
-            print("Step " + str(step) + " file found. Skipping...")
+            #print("Step " + str(step) + " file found. Skipping...")
             continue
 
+        print("Starting at step " + str(step))
         runStep(step, versus, args, resultsDb, replacementSets, ownedCards, commanderIds, playedIds, uniqueIds, legendaryIds)
         stepsRemaining = stepsRemaining - 1
 

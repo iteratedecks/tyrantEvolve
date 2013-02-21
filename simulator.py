@@ -142,6 +142,7 @@ def runMatrix(attackHashes, defenseMatrix, n, ordered = False, surge = False, re
 
     attackCount = len(attackHashes)
 
+    # wins total losses draws
     regexString  = "\D+(\d+)\D+(\d+)"  # Wins  123 / 200
     regexString += "\D+(\d+)\D+\d+" # Losses    123 / 200
     regexString += "\D+(\d+)\D+\d+" # Draws    123 / 200
