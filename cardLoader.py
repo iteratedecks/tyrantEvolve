@@ -112,10 +112,16 @@ def loadCardsWithArgs(args):
 
     return cards
 
-def getNotBadExceptions():
+def getCardBlacklist():
+    blacklist = set()
+
+    blacklist.add(1011)    # Mayumi
+    return blacklist
+
+def getCardWhitelist():
     exceptions = set()
 
-#Acid Athenor
+    exceptions.add(853) #Acid Athenor
     exceptions.add(2012)    # Asylum
     exceptions.add(752) #Atelier
     exceptions.add(2032)    #Blood Wall
@@ -175,8 +181,9 @@ def getIdsFromCardData(cardData, filter = [], ignoreActions = True, ignoreBad = 
         lowHealthIds = set([card.id for card in cardData if card.health <= 2])
 
         badIds = commonIds | uncommonIds | lowHealthIds
-        notBadIds = getNotBadExceptions()
-        badIds = badIds - notBadIds
+        notBadIds = getCardWhitelist()
+        blacklist = getCardBlacklist()
+        badIds = (badIds | blacklist) - notBadIds
         cardIds = cardIds - badIds
 
     commanderIds = set([id for id in cardIds if (id >= 1000 and id < 2000)])
