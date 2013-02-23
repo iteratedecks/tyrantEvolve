@@ -24,6 +24,11 @@ def hashToDeck(hashString):
     decodedString = []
     lastId = -1
     while(len(encodedString) > 0):
+        isOver4000 = False
+        if(encodedString[0] == "-"):
+            isOver4000 = True
+            encodedString = encodedString[1:]
+
         id = decodeBase64(encodedString[:1]) * 64
         id += decodeBase64(encodedString[1:2])
         encodedString = encodedString[2:]
@@ -31,6 +36,8 @@ def hashToDeck(hashString):
             for i in range(0,id - 4000 - 1):
                 decodedString.append(lastId)
         else:
+            if(isOver4000):
+                id += 4000
             decodedString.append(id)
         lastId = id
     return decodedString
@@ -59,9 +66,13 @@ def deckToHash(idList, sort = False):
             encodedString += encodeBase64((lastCount >> 6) & 63)
             encodedString += encodeBase64((lastCount & 63))
             lastCount = 1
+
+        lastId = id
+        if(id > 4000):
+            encodedString += "-"
+            id -= 4000
         encodedString += encodeBase64((id >> 6) & 63)
         encodedString += encodeBase64((id & 63))
-        lastId = id
 
     # need to encode any duplicate ids leftover from the loop
     if(lastCount > 1):
